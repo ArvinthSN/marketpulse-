@@ -145,7 +145,7 @@ def sector_companies(sector_id: int, limit: int = Query(100, ge=1, le=1000), off
 
 @router.get('/sectors/{sector_id}/performance')
 def sector_performance(sector_id: int, period: str = '1D', reporting_currency: str = 'USD', db: Session = Depends(get_db)):
-    return sector_overview(sector_id, reporting_currency, db)
+    return sector_overview(sector_id, reporting_currency, db=db)
 
 
 @router.get('/companies/{company_id}/performance')

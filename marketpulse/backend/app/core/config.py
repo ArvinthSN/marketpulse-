@@ -1,8 +1,13 @@
+from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file='.env', extra='ignore')
+    model_config = SettingsConfigDict(
+        env_file=Path(__file__).resolve().parents[3] / '.env',
+        extra='ignore',
+    )
 
     # SQLite keeps local development self-contained. Docker Compose overrides
     # this value with its PostgreSQL service; production should use PostgreSQL.

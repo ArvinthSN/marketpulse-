@@ -12,6 +12,7 @@ class ExchangeResponse(BaseModel):
 
 class CompanyResponse(BaseModel):
     id: int; name: str; country_code: str | None; website: str | None = None
+    short_name: str | None = None; sector_id: int | None = None; market_cap: float | None = None; shares_outstanding: float | None = None
 
 
 class HistoryResponse(BaseModel):

@@ -9,8 +9,6 @@ class Settings(BaseSettings):
         extra='ignore',
     )
 
-    # SQLite keeps local development self-contained. Docker Compose overrides
-    # this value with its PostgreSQL service; production should use PostgreSQL.
     database_url: str = 'sqlite:///./marketpulse.db'
     admin_api_key: str = 'change-me'
     yahoo_timeout_seconds: float = 20.0
@@ -32,6 +30,13 @@ class Settings(BaseSettings):
     market_data_max_subscriptions: int = 100
     market_data_max_connections: int = 1000
     market_data_persistence_mode: str = 'latest-state-only'
+
+    eodhd_api_key: str | None = None
+    twelve_data_api_key: str | None = None
+    massive_api_key: str | None = None
+    market_data_fallback_providers: str = 'twelvedata,massive'
+    market_data_provider_timeout_seconds: float = 15.0
+    market_data_provider_retries: int = 2
 
 
 settings = Settings()

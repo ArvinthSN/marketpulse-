@@ -4,7 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file='.env', extra='ignore')
 
-    database_url: str = 'postgresql+psycopg://marketpulse:marketpulse@localhost:5432/marketpulse'
+    # SQLite keeps local development self-contained. Docker Compose overrides
+    # this value with its PostgreSQL service; production should use PostgreSQL.
+    database_url: str = 'sqlite:///./marketpulse.db'
     admin_api_key: str = 'change-me'
     yahoo_timeout_seconds: float = 20.0
     yahoo_retries: int = 3

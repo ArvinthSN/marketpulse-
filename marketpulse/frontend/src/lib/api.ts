@@ -38,6 +38,12 @@ export const api = {
     request<Exchange[]>(`/api/v1/exchanges${country ? `?country=${encodeURIComponent(country)}` : ''}`, signal),
   countryOverview: (code: string, signal?: AbortSignal) =>
     request<CountryOverview>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/overview`, signal),
+  countryCompanies: (code: string, limit = 100, signal?: AbortSignal) =>
+    request<CompanyPerformance[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/companies?limit=${limit}`, signal),
+  countryGainers: (code: string, limit = 10, signal?: AbortSignal) =>
+    request<CountryMover[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/gainers?limit=${limit}`, signal),
+  countryLosers: (code: string, limit = 10, signal?: AbortSignal) =>
+    request<CountryMover[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/losers?limit=${limit}`, signal),
   sectors: (signal?: AbortSignal) =>
     request<SectorOverview[]>('/api/v1/analytics/global/sectors', signal),
   sectorOverview: (id: number, signal?: AbortSignal) =>

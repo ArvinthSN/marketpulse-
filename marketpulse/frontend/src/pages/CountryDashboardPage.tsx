@@ -19,6 +19,7 @@ export function CountryDashboardPage() {
   const performanceQuery = useQuery({ queryKey: ['country-company-performance', code], queryFn: ({ signal }) => api.countryCompanies(code, 100, signal), enabled: !!code, refetchInterval: 60_000 });
   const gainersQuery = useQuery({ queryKey: ['country-gainers', code], queryFn: ({ signal }) => api.countryGainers(code, 10, signal), enabled: !!code, refetchInterval: 60_000 });
   const losersQuery = useQuery({ queryKey: ['country-losers', code], queryFn: ({ signal }) => api.countryLosers(code, 10, signal), enabled: !!code, refetchInterval: 60_000 });
+  const sectorsQuery = useQuery({ queryKey: ['country-sectors', code], queryFn: ({ signal }) => api.countrySectors(code, signal), enabled: !!code, refetchInterval: 60_000 });
 
   const country = registryQuery.data?.find(item => item.code.toUpperCase() === code);
   const performanceMap = useMemo(() => new Map((performanceQuery.data ?? []).map(item => [item.company_id, item])), [performanceQuery.data]);
@@ -34,7 +35,7 @@ export function CountryDashboardPage() {
   const overview = overviewQuery.data;
   const status = overview?.data_status ?? 'UNKNOWN';
   const coverage = overview?.coverage;
-  const refresh = () => { void overviewQuery.refetch(); void exchangesQuery.refetch(); void companiesQuery.refetch(); void performanceQuery.refetch(); void gainersQuery.refetch(); void losersQuery.refetch(); };
+  const refresh = () => { void overviewQuery.refetch(); void exchangesQuery.refetch(); void companiesQuery.refetch(); void performanceQuery.refetch(); void gainersQuery.refetch(); void losersQuery.refetch(); void sectorsQuery.refetch(); };
   const renderMovers = (items: { company_id: number; name: string; return_percentage: number }[] | undefined, positive: boolean) => items?.length ? items.map((item, index) => <div className="country-mover-row" key={item.company_id}><span className="mover-rank">{String(index + 1).padStart(2, '0')}</span><span className="mover-name">{item.name}</span><strong className={positive ? 'positive-number' : 'negative-number'}>{positive ? <ArrowUpRight size={13}/> : <ArrowDownRight size={13}/>} {percent(item.return_percentage)}</strong></div>) : <div className="country-inline-empty">No qualifying daily observations are available.</div>;
 
   return <div className="country-dashboard">
@@ -73,6 +74,10 @@ export function CountryDashboardPage() {
         {losersQuery.isLoading ? <LoadingState label="Loading losers"/> : losersQuery.isError ? <ErrorState message={losersQuery.error.message} onRetry={() => void losersQuery.refetch()}/> : renderMovers(losersQuery.data, false)}
       </section>
     </div>
+    <section className="panel country-sector-panel">
+      <div className="section-header"><div><h2>Sector performance</h2><p>Sector aggregates calculated only from companies registered in {country.name}</p></div><span className="panel-count">{sectorsQuery.data?.length ?? 0} SECTORS</span></div>
+      {sectorsQuery.isLoading ? <LoadingState label="Loading country sectors"/> : sectorsQuery.isError ? <ErrorState message={sectorsQuery.error.message} onRetry={() => void sectorsQuery.refetch()}/> : sectorsQuery.data?.length ? <div className="country-sector-grid">{sectorsQuery.data.map(sector => <article className="country-sector-card" key={sector.sector_id}><div><strong>{sector.sector_name}</strong><span>{sector.valid_companies}/{sector.listed_companies} VALID</span></div><b className={sector.market_cap_weighted_return == null ? '' : sector.market_cap_weighted_return > 0 ? 'positive-number' : sector.market_cap_weighted_return < 0 ? 'negative-number' : ''}>{percent(sector.market_cap_weighted_return)}</b><small>Market-cap weighted · {sector.listed_companies} listed companies</small></article>)}</div> : <div className="country-inline-empty">No sector analytics are available for this country.</div>}
+    </section>
     <section className="panel country-company-panel">
       <div className="section-header"><div><h2>Tracked companies</h2><p>Company registry joined with available 1D performance calculations</p></div><span className="panel-count">{companies.length} LISTED</span></div>
       {companiesQuery.isLoading || performanceQuery.isLoading ? <LoadingState label="Loading country companies"/> : companiesQuery.isError ? <ErrorState message={companiesQuery.error.message} onRetry={() => void companiesQuery.refetch()}/> : companies.length ? <div className="country-company-table-wrap"><table className="country-company-table"><thead><tr><th>COMPANY</th><th>SECTOR ID</th><th>MARKET CAP</th><th>1D RETURN</th><th>OBSERVATION</th></tr></thead><tbody>{companies.map(company => <tr key={company.id}><td><strong>{company.short_name || company.name}</strong><small>{company.name}</small></td><td>{company.sector_id ?? '—'}</td><td>{company.market_cap == null ? '—' : formatCompact(company.market_cap)}</td><td className={(company.performance?.performance['1D'] ?? 0) > 0 ? 'positive-number' : (company.performance?.performance['1D'] ?? 0) < 0 ? 'negative-number' : ''}>{percent(company.performance?.performance['1D'])}</td><td>{company.performance?.data_quality.last_market_observation ? new Date(company.performance.data_quality.last_market_observation).toLocaleDateString() : 'Unavailable'}</td></tr>)}</tbody></table></div> : <div className="country-inline-empty">No companies are currently registered for {country.name}.</div>}

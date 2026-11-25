@@ -129,18 +129,20 @@ def country_losers(country_code: str, limit: int = Query(100, ge=1, le=1000), db
 
 
 @router.get('/sectors/{sector_id}/overview')
-def sector_overview(sector_id: int, reporting_currency: str = 'USD', db: Session = Depends(get_db)):
-    result = SectorAnalyticsService(AnalyticsRepository(db)).overview(sector_id, reporting_currency=reporting_currency.upper())
+def sector_overview(sector_id: int, reporting_currency: str = 'USD', country_code: str | None = None, db: Session = Depends(get_db)):
+    result = SectorAnalyticsService(AnalyticsRepository(db)).overview(sector_id, reporting_currency=reporting_currency.upper(), country_code=country_code.upper() if country_code else None)
     if result is None:
         raise HTTPException(status_code=404, detail='Sector not found')
     return result
 
 
 @router.get('/sectors/{sector_id}/companies')
-def sector_companies(sector_id: int, limit: int = Query(100, ge=1, le=1000), offset: int = Query(0, ge=0), db: Session = Depends(get_db)):
+def sector_companies(sector_id: int, limit: int = Query(100, ge=1, le=1000), offset: int = Query(0, ge=0), country_code: str | None = None, db: Session = Depends(get_db)):
     repository = AnalyticsRepository(db)
-    companies = repository.get_companies(sector_id=sector_id, limit=limit, offset=offset)
-    return [{'company_id': company.id, 'name': company.name, 'market_cap': float(company.market_cap) if company.market_cap is not None else None} for company in companies]
+    if repository.get_sector(sector_id) is None:
+        raise HTTPException(status_code=404, detail='Sector not found')
+    companies = repository.get_companies(sector_id=sector_id, country_code=country_code.upper() if country_code else None, limit=limit, offset=offset)
+    return [{'company_id': company.id, 'name': company.name, 'market_cap': float(company.market_cap) if company.market_cap is not None else None, 'country_code': company.country_code} for company in companies]
 
 
 @router.get('/sectors/{sector_id}/performance')

@@ -18,10 +18,6 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-Keep this backend terminal running. Open a **second VS Code terminal** for the frontend commands below. To run backend tests, use `pytest` from the `backend` directory.
-
-The SQLite database file is created at `backend/marketpulse.db` when you run the backend from the `backend` directory.
-
 API: http://localhost:8000/docs
 
 ## Frontend
@@ -34,39 +30,36 @@ npm run dev
 
 Open http://localhost:5173.
 
-## PostgreSQL with Docker (production-like local environment)
+## Multi-provider market data
 
-```bash
-cd marketpulse
-cp .env.example .env
-docker compose up --build
+The market-data provider factory supports three licensed REST adapters:
+
+- **EODHD** — global-oriented EOD, delayed quote, and company fundamentals endpoints.
+- **Twelve Data** — multi-market quote, time-series, and company profile endpoints.
+- **Massive** — US-equity snapshot, aggregate bars, and ticker reference endpoints.
+
+Set credentials in the untracked local `.env` file. Never commit real keys.
+
+```env
+EODHD_API_KEY=...
+TWELVE_DATA_API_KEY=...
+MASSIVE_API_KEY=...
+MARKET_DATA_PROVIDER=eodhd
+MARKET_DATA_FALLBACK_PROVIDERS=twelvedata,massive
 ```
 
-Docker Compose overrides `DATABASE_URL` and runs PostgreSQL plus Redis. For production deployments, use PostgreSQL rather than the local SQLite database.
+The configured primary is tried first; fallback providers are attempted in order when a request fails or returns no quote. REST adapters do not implement WebSocket streaming. Provider entitlements, exchange coverage, delayed/live status, and rate limits depend on each vendor plan. Massive is implemented here for US-equity endpoints and must not be treated as a global-equity provider.
 
-## CLI
-
-```bash
-python -m app.cli sync-registry
-python -m app.cli import-universe --file instrument-universe.csv --country IN --exchange NSE
-python -m app.cli ingest --exchange NSE --limit 100
-python -m app.cli resume-ingestion --run-id 1
-python -m app.cli show-ingestion-status
-```
-
-Country ingestion is deliberately not claimed until a maintained instrument list is configured. The provider has no guaranteed exchange-wide Yahoo Finance discovery API.
+Retries cover network/timeouts, HTTP 429 and 5xx responses with bounded exponential backoff. Historical bars are returned in a common OHLCV dictionary shape; company metadata remains provider-sourced and may have missing fields.
 
 ## Important limitations
 
 - SQLite is intended for local development and single-user workflows; PostgreSQL remains the production database.
-- Data is not necessarily real-time and no streaming is implemented.
+- Data is not necessarily real-time and no streaming is implemented by these REST adapters.
 - Yahoo Finance coverage and fields vary by symbol.
 - Sector and market capitalization can be missing.
-- Exchange discovery requires separate supported search/screener functionality or a maintained instrument list.
-- Unit tests use synthetic data and do not require network access.
-
-## Phase 3 live market infrastructure
-
-Live infrastructure supports snapshot-only providers and Redis cache/PubSub. Real-time streaming requires an officially licensed provider. Redis is optional and live endpoints degrade when unavailable.
+- Exchange discovery requires supported search/screener functionality or a maintained instrument list.
+- Unit tests use mocked provider responses and do not require network access.
+- Vendor API plans can restrict endpoint access; a valid key does not guarantee every endpoint is enabled.
 
 Use `MARKET_DATA_PROVIDER=none` for normal startup without credentials.

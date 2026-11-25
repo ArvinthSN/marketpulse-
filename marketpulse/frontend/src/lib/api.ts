@@ -33,6 +33,7 @@ export const api = {
   globalOverview: (period = '1D', signal?: AbortSignal) =>
     request<GlobalOverview>(`/api/v1/analytics/global/overview?period=${encodeURIComponent(period)}`, signal),
   countries: (signal?: AbortSignal) => request<Country[]>('/api/v1/countries', signal),
+  globalCountries: (signal?: AbortSignal) => request<CountryOverview[]>('/api/v1/analytics/global/countries', signal),
   exchanges: (country?: string, signal?: AbortSignal) =>
     request<Exchange[]>(`/api/v1/exchanges${country ? `?country=${encodeURIComponent(country)}` : ''}`, signal),
   countryOverview: (code: string, signal?: AbortSignal) =>

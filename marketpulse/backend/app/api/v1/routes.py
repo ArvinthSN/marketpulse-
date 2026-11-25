@@ -50,19 +50,19 @@ def companies(
         stmt = stmt.where(Company.sector_id == sector_id)
     if q and q.strip():
         term = f"%{q.strip()}%"
-        stmt = stmt.outerjoin(CompanySymbol, CompanySymbol.company_id == Company.id).where(or_(
+        stmt = stmt.where(or_(
             Company.name.ilike(term),
             Company.short_name.ilike(term),
             Company.isin.ilike(term),
-            CompanySymbol.symbol.ilike(term),
-        )).distinct()
+            Company.id.in_(select(CompanySymbol.company_id).where(CompanySymbol.symbol.ilike(term))),
+        ))
     if exchange:
         exchange_row = db.scalar(select(Exchange).where(Exchange.code == exchange.upper()))
         if exchange_row is None:
             return []
-        stmt = stmt.join(CompanySymbol, CompanySymbol.company_id == Company.id).where(
+        stmt = stmt.where(Company.id.in_(select(CompanySymbol.company_id).where(
             CompanySymbol.exchange_id == exchange_row.id
-        ).distinct()
+        )))
     stmt = stmt.order_by(Company.name.asc(), Company.id.asc()).limit(limit).offset(offset)
     return db.scalars(stmt).unique().all()
 

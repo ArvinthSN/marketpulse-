@@ -1,6 +1,10 @@
 from pathlib import Path
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+BACKEND_ROOT = Path(__file__).resolve().parents[2]
 
 
 class Settings(BaseSettings):
@@ -9,9 +13,25 @@ class Settings(BaseSettings):
         extra='ignore',
     )
 
-    # SQLite keeps local development self-contained. Docker Compose overrides
-    # this value with its PostgreSQL service; production should use PostgreSQL.
-    database_url: str = 'sqlite:///./marketpulse.db'
+    # Keep SQLite in the backend directory regardless of the shell's current
+    # working directory. This ensures Alembic and Uvicorn open the same file.
+    database_url: str = f"sqlite:///{(BACKEND_ROOT / 'marketpulse.db').as_posix()}"
+
+    @field_validator('database_url', mode='before')
+    @classmethod
+    def resolve_relative_sqlite_url(cls, value: str) -> str:
+        if not isinstance(value, str) or not value.startswith('sqlite:///'):
+            return value
+
+        database_path = value.removeprefix('sqlite:///')
+        if database_path == ':memory:' or database_path.startswith('file:'):
+            return value
+
+        path = Path(database_path)
+        if not path.is_absolute():
+            path = BACKEND_ROOT / path
+        return f"sqlite:///{path.resolve().as_posix()}"
+
     admin_api_key: str = 'change-me'
     yahoo_timeout_seconds: float = 20.0
     yahoo_retries: int = 3

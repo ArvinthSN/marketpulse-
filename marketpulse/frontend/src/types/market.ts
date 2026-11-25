@@ -71,6 +71,8 @@ export interface CompanyPerformance {
   };
 }
 
+export interface CompanyHistory { timestamp: string; open: number; high: number; low: number; close: number; volume: number; currency: string; }
+
 export interface Company {
   id: number;
   name: string;
@@ -79,6 +81,7 @@ export interface Company {
   sector_id?: number | null;
   market_cap?: number | null;
   shares_outstanding?: number | null;
+  website?: string | null;
 }
 
 export interface Country {

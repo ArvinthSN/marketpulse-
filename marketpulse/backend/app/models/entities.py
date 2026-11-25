@@ -47,6 +47,9 @@ class Company(Base):
     short_name: Mapped[str | None] = mapped_column(String(300))
     website: Mapped[str | None] = mapped_column(String(500))
     market_cap: Mapped[Decimal | None] = mapped_column(Numeric(20, 2))
+    shares_outstanding: Mapped[Decimal | None] = mapped_column(Numeric(24, 6))
+    shares_outstanding_source: Mapped[str | None] = mapped_column(String(100))
+    shares_outstanding_at: Mapped[datetime | None] = mapped_column(DateTime)
     isin: Mapped[str | None] = mapped_column(String(20), unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
@@ -72,6 +75,7 @@ class HistoricalPrice(Base):
     high: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
     low: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
     close: Mapped[Decimal] = mapped_column(Numeric(18, 6), nullable=False)
+    adjusted_close: Mapped[Decimal | None] = mapped_column(Numeric(18, 6))
     volume: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     currency: Mapped[str] = mapped_column(String(3), nullable=False)
     interval: Mapped[str] = mapped_column(String(20), nullable=False)
@@ -147,3 +151,43 @@ class IngestionItem(Base):
     started_at: Mapped[datetime | None] = mapped_column(DateTime)
     finished_at: Mapped[datetime | None] = mapped_column(DateTime)
     __table_args__ = (UniqueConstraint('run_id', 'symbol', name='uq_ingestion_run_symbol'),)
+
+
+class FXRateSnapshot(Base):
+    __tablename__ = 'exchange_rate_snapshots'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    base_currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    quote_currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    rate: Mapped[Decimal] = mapped_column(Numeric(24, 12), nullable=False)
+    observed_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    source: Mapped[str] = mapped_column(String(100), nullable=False)
+    __table_args__ = (UniqueConstraint('base_currency', 'quote_currency', 'observed_at', name='uq_fx_currency_timestamp'), Index('ix_fx_lookup', 'base_currency', 'quote_currency', 'observed_at'))
+
+
+class AnalyticsSnapshot(Base):
+    __tablename__ = 'analytics_snapshots'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    entity_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    entity_id: Mapped[str] = mapped_column(String(50), nullable=False)
+    period: Mapped[str] = mapped_column(String(20), nullable=False)
+    reporting_currency: Mapped[str] = mapped_column(String(3), nullable=False)
+    methodology_version: Mapped[str] = mapped_column(String(20), nullable=False)
+    calculated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
+    source_observation_at: Mapped[datetime | None] = mapped_column(DateTime)
+    coverage_json: Mapped[str | None] = mapped_column(Text)
+    result_json: Mapped[str] = mapped_column(Text, nullable=False)
+    __table_args__ = (UniqueConstraint('entity_type', 'entity_id', 'period', 'reporting_currency', name='uq_analytics_snapshot'), Index('ix_analytics_lookup', 'entity_type', 'entity_id', 'calculated_at'))
+
+
+class AnalyticsJobRun(Base):
+    __tablename__ = 'analytics_job_runs'
+    id: Mapped[int] = mapped_column(primary_key=True)
+    scope_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    scope_value: Mapped[str | None] = mapped_column(String(50))
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default='running')
+    periods: Mapped[str] = mapped_column(Text, nullable=False)
+    started_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=utcnow)
+    finished_at: Mapped[datetime | None] = mapped_column(DateTime)
+    records_processed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    failed: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    error_summary: Mapped[str | None] = mapped_column(Text)

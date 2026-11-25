@@ -3,10 +3,12 @@ from app.api.v1.routes import router
 from app.database.session import engine
 from app.database.session import Base
 from app.services.health_service import database_health
+from app.api.v1.analytics.routes import router as analytics_router
 import app.models.entities
 
 app = FastAPI(title='MARKETPULSE', version='0.1.0')
 app.include_router(router, prefix='/api/v1')
+app.include_router(analytics_router, prefix='/api/v1')
 
 
 @app.on_event('startup')

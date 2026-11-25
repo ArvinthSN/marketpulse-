@@ -1,10 +1,13 @@
 # Testing
 
+## Phase 2 analytics tests
+
 ```bash
 cd backend
+pytest tests/unit/test_analytics_returns.py tests/unit/test_analytics_aggregations.py tests/unit/test_fx.py tests/unit/test_analytics_api.py
 pytest
-pytest -m integration
-MARKETPULSE_YAHOO_INTEGRATION=1 pytest tests/integration/test_yahoo_opt_in.py
+alembic upgrade head
+alembic heads
 ```
 
 Normal CI only uses synthetic fixtures and in-memory SQLite unit tests. It does not depend on Yahoo Finance or PostgreSQL.

@@ -71,7 +71,7 @@ export interface CompanyPerformance {
   };
 }
 
-export interface Company {
+export interface CompanyHistory { timestamp: string; open: number; high: number; low: number; close: number; volume: number; currency: string; }\n\nexport interface Company {
   id: number;
   name: string;
   short_name?: string | null;

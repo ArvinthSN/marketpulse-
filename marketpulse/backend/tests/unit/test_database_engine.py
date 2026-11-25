@@ -2,6 +2,7 @@ import pytest
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 
+from app.core.config import BACKEND_ROOT, Settings
 from app.database.session import create_database_engine
 
 
@@ -24,3 +25,18 @@ def test_sqlite_engine_enables_foreign_keys(tmp_path):
                 )
     finally:
         engine.dispose()
+
+
+def test_relative_sqlite_url_is_anchored_to_backend_directory():
+    settings = Settings(database_url="sqlite:///./marketpulse.db")
+
+    assert settings.database_url == (
+        f"sqlite:///{(BACKEND_ROOT / 'marketpulse.db').resolve().as_posix()}"
+    )
+
+
+def test_absolute_sqlite_url_is_preserved(tmp_path):
+    database_path = (tmp_path / "custom.db").resolve()
+    settings = Settings(database_url=f"sqlite:///{database_path.as_posix()}")
+
+    assert settings.database_url == f"sqlite:///{database_path.as_posix()}"

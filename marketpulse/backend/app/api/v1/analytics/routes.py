@@ -82,9 +82,12 @@ def country_performance(country_code: str, period: str = '1D', reporting_currenc
 @router.get('/countries/{country_code}/sectors')
 def country_sectors(country_code: str, limit: int = Query(100, ge=1, le=1000), db: Session = Depends(get_db)):
     from app.models.entities import Sector
+    repository = AnalyticsRepository(db)
+    if repository.get_country(country_code) is None:
+        raise HTTPException(status_code=404, detail='Country not found')
     sectors = db.scalars(select(Sector).order_by(Sector.id).limit(limit)).all()
-    service = SectorAnalyticsService(AnalyticsRepository(db))
-    return [service.overview(sector.id) for sector in sectors]
+    service = SectorAnalyticsService(repository)
+    return [item for sector in sectors if (item := service.overview(sector.id, country_code=country_code.upper())) is not None]
 
 
 @router.get('/countries/{country_code}/companies')

@@ -299,3 +299,28 @@ h1 em{font-style:normal;color:#77a9f5}
 .company-chart-panel{min-width:0;overflow:hidden}
 @media(max-width:760px){.drill-heading,.drill-detail-heading{align-items:flex-start;flex-direction:column}.drill-actions{width:100%;flex-wrap:wrap}.drill-context{display:grid;grid-template-columns:1fr 1fr}.drill-detail-heading .country-back-link{margin-top:5px}}
 @media(max-width:440px){.drill-context{grid-template-columns:1fr}}
+
+/* Phase 4.5 — company directory, analytics controls and watchlist */
+.page-stack{display:grid;gap:16px}
+.search-field{display:flex;align-items:center;gap:10px;padding:12px 13px;border:1px solid #2a3a50;border-radius:7px;background:#0c1420;color:#86a3c8}
+.search-field input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:#e4edf9;font:400 11px 'DM Sans',sans-serif}
+.search-field input::placeholder{color:#63758d}
+.filter-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
+.filter-row select{min-width:0;padding:10px;border:1px solid #29394e;border-radius:6px;background:#121d2b;color:#c4d2e5;font:400 10px 'DM Sans',sans-serif}
+.data-table{width:100%;border-collapse:collapse;white-space:nowrap}
+.data-table th{text-align:left;padding:11px 12px;color:#71849d;font:500 8px 'DM Mono',monospace;letter-spacing:.55px;border-bottom:1px solid #29374b}
+.data-table td{padding:12px;border-bottom:1px solid #1e2b3d;color:#aebdd0;font-size:10px}
+.data-table td small{display:block;color:#71839a;font-size:8px;margin-top:3px}
+.company-link{color:#dce8f8;text-decoration:none;font-weight:600}
+.company-link:hover{color:#8fb8f4}
+.table-scroll{overflow-x:auto}
+.pagination{display:flex;align-items:center;justify-content:space-between;padding-top:14px;color:#8092aa;font:500 9px 'DM Mono',monospace}
+.pagination button,.watchlist-action{display:inline-flex;align-items:center;gap:6px;border:1px solid #2b3c53;border-radius:6px;background:#152237;color:#a9c5e9;padding:8px 10px;font-size:9px;cursor:pointer}
+.pagination button:disabled{opacity:.38;cursor:not-allowed}
+.error-text{color:#e99aa7;font-size:11px}
+.muted-text{color:#7c8da4;font-size:9px;margin-top:12px}
+.company-detail-actions{display:flex;align-items:center;gap:14px}
+.watchlist-action.saved{color:#75d6a7;border-color:#285843;background:#11271f}
+.period-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 12px;border:1px solid #253449;border-radius:7px;background:#101824}
+.period-toolbar>span{font:500 8px 'DM Mono',monospace;color:#7388a4;letter-spacing:.6px}
+@media(max-width:760px){.filter-row{grid-template-columns:1fr}.company-detail-actions{flex-wrap:wrap}.period-toolbar{align-items:flex-start;flex-direction:column}.period-control{flex-wrap:wrap}}

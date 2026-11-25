@@ -12,15 +12,11 @@ export class ApiError extends Error {
 async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`${API_BASE}${path}`, {
-      signal,
-      headers: { Accept: 'application/json' }
-    });
+    response = await fetch(`${API_BASE}${path}`, { signal, headers: { Accept: 'application/json' } });
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') throw error;
     throw new ApiError('Unable to reach MARKETPULSE API. Check that the backend is running.', 0);
   }
-
   if (!response.ok) {
     const body = await response.json().catch(() => null) as { detail?: unknown } | null;
     const message = typeof body?.detail === 'string' ? body.detail : `Request failed (${response.status})`;
@@ -30,40 +26,31 @@ async function request<T>(path: string, signal?: AbortSignal): Promise<T> {
 }
 
 export const api = {
-  globalOverview: (period = '1D', signal?: AbortSignal) =>
-    request<GlobalOverview>(`/api/v1/analytics/global/overview?period=${encodeURIComponent(period)}`, signal),
+  globalOverview: (period = '1D', signal?: AbortSignal) => request<GlobalOverview>(`/api/v1/analytics/global/overview?period=${encodeURIComponent(period)}`, signal),
   countries: (signal?: AbortSignal) => request<Country[]>('/api/v1/countries', signal),
   globalCountries: (signal?: AbortSignal) => request<CountryOverview[]>('/api/v1/analytics/global/countries', signal),
-  exchanges: (country?: string, signal?: AbortSignal) =>
-    request<Exchange[]>(`/api/v1/exchanges${country ? `?country=${encodeURIComponent(country)}` : ''}`, signal),
-  countryOverview: (code: string, signal?: AbortSignal) =>
-    request<CountryOverview>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/overview`, signal),
-  countryCompanies: (code: string, limit = 100, signal?: AbortSignal) =>
-    request<CompanyPerformance[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/companies?limit=${limit}`, signal),
-  countryGainers: (code: string, limit = 10, signal?: AbortSignal) =>
-    request<CountryMover[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/gainers?limit=${limit}`, signal),
-  countryLosers: (code: string, limit = 10, signal?: AbortSignal) =>
-    request<CountryMover[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/losers?limit=${limit}`, signal),
-  countrySectors: (code: string, signal?: AbortSignal) =>
-    request<SectorOverview[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/sectors`, signal),
-  sectors: (signal?: AbortSignal) =>
-    request<SectorOverview[]>('/api/v1/analytics/global/sectors', signal),
-  sectorOverview: (id: number, country?: string, signal?: AbortSignal) =>
-    request<SectorOverview>(`/api/v1/analytics/sectors/${id}/overview${country ? `?country_code=${encodeURIComponent(country)}` : ''}`, signal),
-  companies: (params: { country?: string; limit?: number; offset?: number } = {}, signal?: AbortSignal) => {
+  exchanges: (country?: string, signal?: AbortSignal) => request<Exchange[]>(`/api/v1/exchanges${country ? `?country=${encodeURIComponent(country)}` : ''}`, signal),
+  countryOverview: (code: string, signal?: AbortSignal) => request<CountryOverview>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/overview`, signal),
+  countryCompanies: (code: string, limit = 100, signal?: AbortSignal) => request<CompanyPerformance[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/companies?limit=${limit}`, signal),
+  countryGainers: (code: string, limit = 10, signal?: AbortSignal) => request<CountryMover[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/gainers?limit=${limit}`, signal),
+  countryLosers: (code: string, limit = 10, signal?: AbortSignal) => request<CountryMover[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/losers?limit=${limit}`, signal),
+  countrySectors: (code: string, signal?: AbortSignal) => request<SectorOverview[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/sectors`, signal),
+  sectors: (signal?: AbortSignal) => request<SectorOverview[]>('/api/v1/analytics/global/sectors', signal),
+  sectorOverview: (id: number, country?: string, signal?: AbortSignal) => request<SectorOverview>(`/api/v1/analytics/sectors/${id}/overview${country ? `?country_code=${encodeURIComponent(country)}` : ''}`, signal),
+  companies: (params: { q?: string; country?: string; sector_id?: number; exchange?: string; limit?: number; offset?: number } = {}, signal?: AbortSignal) => {
     const query = new URLSearchParams();
+    if (params.q) query.set('q', params.q);
     if (params.country) query.set('country', params.country);
-    query.set('limit', String(params.limit ?? 100));
+    if (params.sector_id) query.set('sector_id', String(params.sector_id));
+    if (params.exchange) query.set('exchange', params.exchange);
+    query.set('limit', String(params.limit ?? 50));
     query.set('offset', String(params.offset ?? 0));
     return request<Company[]>(`/api/v1/companies?${query.toString()}`, signal);
   },
-  sectorCompanies: (id: number, country?: string, signal?: AbortSignal) =>
-    request<{ company_id: number; name: string; market_cap: number | null; country_code: string | null }[]>(`/api/v1/analytics/sectors/${id}/companies?limit=1000${country ? `&country_code=${encodeURIComponent(country)}` : ''}`, signal),
+  sectorCompanies: (id: number, country?: string, signal?: AbortSignal) => request<{ company_id: number; name: string; market_cap: number | null; country_code: string | null }[]>(`/api/v1/analytics/sectors/${id}/companies?limit=1000${country ? `&country_code=${encodeURIComponent(country)}` : ''}`, signal),
   company: (id: number, signal?: AbortSignal) => request<Company>(`/api/v1/companies/${id}`, signal),
   companyHistory: (id: number, limit = 1000, signal?: AbortSignal) => request<CompanyHistory[]>(`/api/v1/companies/${id}/history?limit=${limit}`, signal),
   companyMetrics: (id: number, signal?: AbortSignal) => request<{ current_volume: number | null; relative_volume: number | null; historical_volatility: number | null }>(`/api/v1/analytics/companies/${id}/metrics`, signal),
-  companyPerformance: (id: number, period = '1D', signal?: AbortSignal) =>
-    request<CompanyPerformance>(`/api/v1/analytics/companies/${id}/performance?period=${encodeURIComponent(period)}`, signal),
-  quote: (symbol: string, exchange = 'NASDAQ', signal?: AbortSignal) =>
-    request<Quote>(`/api/v1/market/quotes/${encodeURIComponent(symbol)}?exchange=${encodeURIComponent(exchange)}`, signal)
+  companyPerformance: (id: number, period = '1D', signal?: AbortSignal) => request<CompanyPerformance>(`/api/v1/analytics/companies/${id}/performance?period=${encodeURIComponent(period)}`, signal),
+  quote: (symbol: string, exchange = 'NASDAQ', signal?: AbortSignal) => request<Quote>(`/api/v1/market/quotes/${encodeURIComponent(symbol)}?exchange=${encodeURIComponent(exchange)}`, signal)
 };

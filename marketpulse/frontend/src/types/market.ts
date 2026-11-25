@@ -29,6 +29,9 @@ export interface CountryOverview {
   total_market_cap: number | null;
   tracked_companies: number;
   breadth: Breadth;
+  data_status?: DataStatus;
+  source_observation_at?: string | null;
+  coverage?: { expected: number; available: number; missing: number };
 }
 
 export interface SectorOverview {

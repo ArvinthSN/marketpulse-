@@ -29,8 +29,13 @@ def database_health_endpoint():
 
 
 @app.get('/health/providers')
-def provider_health():
-    return {'status':'configured','providers':['yahoo'],'streaming':False}
+async def provider_health():
+    from app.market_data.providers.provider_factory import ProviderFactory
+    provider = ProviderFactory.create()
+    try:
+        return await provider.health_check()
+    finally:
+        await provider.disconnect()
 
 
 @app.get('/health/live')

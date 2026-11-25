@@ -257,3 +257,14 @@ h1 em{font-style:normal;color:#77a9f5}
 @media(max-width:1050px){.markets-country-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:760px){.country-dashboard-heading,.markets-directory-heading{align-items:flex-start;flex-direction:column}.country-heading-actions{flex-wrap:wrap}.country-dashboard-grid{grid-template-columns:1fr}.markets-country-grid{grid-template-columns:1fr}.country-data-context{display:grid;grid-template-columns:1fr 1fr}.country-exchange-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:440px){.country-data-context{grid-template-columns:1fr}.country-exchange-grid{grid-template-columns:1fr}.country-breadth{grid-template-columns:1fr}}
+
+
+.country-sector-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.country-sector-card{display:flex;flex-direction:column;gap:9px;padding:12px;border:1px solid #27374c;border-radius:6px;background:linear-gradient(145deg,#142238,#101a28)}
+.country-sector-card>div{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.country-sector-card>div strong{color:#dce7f5;font:600 10px Manrope,sans-serif}
+.country-sector-card>div span{color:#70839d;font:500 7px 'DM Mono',monospace;white-space:nowrap}
+.country-sector-card>b{font:650 16px 'DM Mono',monospace;color:#a8b8ce}
+.country-sector-card>small{color:#71839a;font-size:8px}
+@media(max-width:760px){.country-sector-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:440px){.country-sector-grid{grid-template-columns:1fr}}

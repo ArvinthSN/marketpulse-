@@ -1,4 +1,4 @@
-import type { Company, CompanyPerformance, Country, CountryOverview, Exchange, GlobalOverview, SectorOverview, Quote } from '../types/market';
+import type { Company, CompanyPerformance, Country, CountryOverview, Exchange, GlobalOverview, SectorOverview, Quote, CountryMover } from '../types/market';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 

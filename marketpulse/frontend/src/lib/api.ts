@@ -44,6 +44,8 @@ export const api = {
     request<CountryMover[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/gainers?limit=${limit}`, signal),
   countryLosers: (code: string, limit = 10, signal?: AbortSignal) =>
     request<CountryMover[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/losers?limit=${limit}`, signal),
+  countrySectors: (code: string, signal?: AbortSignal) =>
+    request<SectorOverview[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/sectors`, signal),
   sectors: (signal?: AbortSignal) =>
     request<SectorOverview[]>('/api/v1/analytics/global/sectors', signal),
   sectorOverview: (id: number, signal?: AbortSignal) =>

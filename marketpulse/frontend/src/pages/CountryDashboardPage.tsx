@@ -53,7 +53,7 @@ export function CountryDashboardPage() {
     <div className="country-data-context">
       <span><b>DATA COVERAGE</b> {coverage ? `${coverage.available} / ${coverage.expected} companies` : 'Not reported'}</span>
       <span><b>LAST SOURCE OBSERVATION</b> {overview?.source_observation_at ? new Date(overview.source_observation_at).toLocaleString() : 'Unavailable'}</span>
-      <span><b>REPORTING CURRENCY</b> {overview?.reporting_currency ?? country.currency}</span>
+      <span><b>REPORTING CURRENCY</b> {country.currency}</span>
       <span><b>DATA MODE</b> Persisted daily snapshot</span>
     </div>
     <div className="country-dashboard-grid">

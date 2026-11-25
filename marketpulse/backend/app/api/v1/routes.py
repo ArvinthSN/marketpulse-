@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from sqlalchemy.orm import Session
 from app.database.session import get_db
 from app.core.security import require_admin
@@ -34,14 +34,36 @@ def country_exchanges(country_code: str, db: Session = Depends(get_db)):
 
 
 @router.get('/companies', response_model=list[CompanyResponse])
-def companies(country: str | None = None, exchange: str | None = None, limit: int = Query(100, ge=1, le=1000), offset: int = Query(0, ge=0), db: Session = Depends(get_db)):
+def companies(
+    q: str | None = Query(None, max_length=120),
+    country: str | None = None,
+    sector_id: int | None = Query(None, ge=1),
+    exchange: str | None = None,
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+    db: Session = Depends(get_db),
+):
     stmt = select(Company)
-    if country: stmt = stmt.where(Company.country_code == country.upper())
+    if country:
+        stmt = stmt.where(Company.country_code == country.upper())
+    if sector_id:
+        stmt = stmt.where(Company.sector_id == sector_id)
+    if q and q.strip():
+        term = f"%{q.strip()}%"
+        stmt = stmt.where(or_(
+            Company.name.ilike(term),
+            Company.short_name.ilike(term),
+            Company.isin.ilike(term),
+            Company.id.in_(select(CompanySymbol.company_id).where(CompanySymbol.symbol.ilike(term))),
+        ))
     if exchange:
         exchange_row = db.scalar(select(Exchange).where(Exchange.code == exchange.upper()))
-        if exchange_row:
-            stmt = stmt.join(CompanySymbol, CompanySymbol.company_id == Company.id).where(CompanySymbol.exchange_id == exchange_row.id)
-    stmt = stmt.order_by(Company.id).limit(limit).offset(offset)
+        if exchange_row is None:
+            return []
+        stmt = stmt.where(Company.id.in_(select(CompanySymbol.company_id).where(
+            CompanySymbol.exchange_id == exchange_row.id
+        )))
+    stmt = stmt.order_by(Company.name.asc(), Company.id.asc()).limit(limit).offset(offset)
     return db.scalars(stmt).unique().all()
 
 

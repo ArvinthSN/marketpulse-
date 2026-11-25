@@ -5,7 +5,7 @@ import { MetricCard } from '../components/MetricCard';
 import { SectionHeader } from '../components/SectionHeader';
 import { LoadingState, ErrorState, EmptyState } from '../components/StateView';
 import { StatusPill } from '../components/StatusPill';
-import { formatCompact, formatDate, formatNumber, formatPercent } from '../lib/format';
+import { formatDate, formatNumber, formatPercent } from '../lib/format';
 import type { CountryOverview, SectorOverview } from '../types/market';
 
 const periods = ['1D', '1W', '1M', '3M', '6M', 'YTD', '1Y'];

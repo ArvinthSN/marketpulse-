@@ -47,6 +47,12 @@ export interface SectorOverview {
   breadth: Breadth;
 }
 
+export interface CountryMover {
+  company_id: number;
+  name: string;
+  return_percentage: number;
+}
+
 export interface CompanyPerformance {
   company_id: number;
   symbol: string;

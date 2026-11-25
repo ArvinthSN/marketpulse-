@@ -47,6 +47,33 @@ class FallbackMarketDataProvider(AsyncMarketDataProvider):
                 quotes.append(quote)
         return quotes
 
+    async def get_history(self, symbol: str, *, start: str, end: str,
+                          interval: str = "1day") -> list[dict]:
+        for provider in self.providers:
+            method = getattr(provider, "get_history", None)
+            if method is None:
+                continue
+            try:
+                rows = await method(symbol, start=start, end=end, interval=interval)
+                if rows:
+                    return rows
+            except Exception:
+                continue
+        return []
+
+    async def get_company(self, symbol: str) -> dict | None:
+        for provider in self.providers:
+            method = getattr(provider, "get_company", None)
+            if method is None:
+                continue
+            try:
+                company = await method(symbol)
+                if company:
+                    return company
+            except Exception:
+                continue
+        return None
+
     async def health_check(self) -> dict:
         statuses = []
         for provider in self.providers:

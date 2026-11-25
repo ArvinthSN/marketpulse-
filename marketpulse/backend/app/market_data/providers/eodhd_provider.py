@@ -42,7 +42,7 @@ class EODHDProvider(RestMarketDataProvider):
         if interval not in {"1day", "daily"}:
             raise ValueError("EODHD historical adapter currently supports daily bars only")
         payload = await self._get(f"/eod/{self._symbol(symbol)}",
-            params=self._params(from_=start, to=end))
+            params=self._params(**{"from": start, "to": end}))
         return [self._bar(row) for row in payload if isinstance(row, dict)] if isinstance(payload, list) else []
 
     @staticmethod

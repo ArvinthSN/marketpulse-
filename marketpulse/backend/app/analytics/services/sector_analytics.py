@@ -6,11 +6,11 @@ class SectorAnalyticsService:
     def __init__(self, repository):
         self.repository = repository
 
-    def overview(self, sector_id: int, period: str = '1D', reporting_currency: str = 'USD'):
+    def overview(self, sector_id: int, period: str = '1D', reporting_currency: str = 'USD', country_code: str | None = None):
         sector = self.repository.get_sector(sector_id)
         if sector is None:
             return None
-        companies = self.repository.get_companies(sector_id=sector_id)
+        companies = self.repository.get_companies(sector_id=sector_id, country_code=country_code)
         items = []
         values = []
         for company in companies:

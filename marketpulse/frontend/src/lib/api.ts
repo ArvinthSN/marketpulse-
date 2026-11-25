@@ -1,4 +1,4 @@
-import type { Company, CompanyPerformance, Country, CountryOverview, Exchange, GlobalOverview, SectorOverview, Quote } from '../types/market';
+import type { Company, CompanyPerformance, Country, CountryOverview, Exchange, GlobalOverview, SectorOverview, Quote, CountryMover } from '../types/market';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
@@ -33,10 +33,19 @@ export const api = {
   globalOverview: (period = '1D', signal?: AbortSignal) =>
     request<GlobalOverview>(`/api/v1/analytics/global/overview?period=${encodeURIComponent(period)}`, signal),
   countries: (signal?: AbortSignal) => request<Country[]>('/api/v1/countries', signal),
+  globalCountries: (signal?: AbortSignal) => request<CountryOverview[]>('/api/v1/analytics/global/countries', signal),
   exchanges: (country?: string, signal?: AbortSignal) =>
     request<Exchange[]>(`/api/v1/exchanges${country ? `?country=${encodeURIComponent(country)}` : ''}`, signal),
   countryOverview: (code: string, signal?: AbortSignal) =>
     request<CountryOverview>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/overview`, signal),
+  countryCompanies: (code: string, limit = 100, signal?: AbortSignal) =>
+    request<CompanyPerformance[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/companies?limit=${limit}`, signal),
+  countryGainers: (code: string, limit = 10, signal?: AbortSignal) =>
+    request<CountryMover[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/gainers?limit=${limit}`, signal),
+  countryLosers: (code: string, limit = 10, signal?: AbortSignal) =>
+    request<CountryMover[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/losers?limit=${limit}`, signal),
+  countrySectors: (code: string, signal?: AbortSignal) =>
+    request<SectorOverview[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/sectors`, signal),
   sectors: (signal?: AbortSignal) =>
     request<SectorOverview[]>('/api/v1/analytics/global/sectors', signal),
   sectorOverview: (id: number, signal?: AbortSignal) =>

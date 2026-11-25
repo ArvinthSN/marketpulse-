@@ -17,6 +17,7 @@ class OHLCVRecord(BaseModel):
     high: Decimal = Field(gt=0)
     low: Decimal = Field(gt=0)
     close: Decimal = Field(gt=0)
+    adjusted_close: Decimal | None = Field(default=None, gt=0)
     volume: int = Field(ge=0)
     currency: str
 

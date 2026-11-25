@@ -148,7 +148,11 @@ def sector_performance(sector_id: int, period: str = '1D', reporting_currency: s
 @router.get('/companies/{company_id}/performance')
 def company_performance(company_id: int, period: str = '1D', reporting_currency: str = 'USD', adjusted: bool = True, db: Session = Depends(get_db)):
     try:
-        result = CompanyAnalyticsService(AnalyticsRepository(db)).performance(company_id, reporting_currency.upper(), period, adjusted)
+        period = period.upper()
+        reporting_currency = reporting_currency.upper()
+        if len(reporting_currency) != 3 or not reporting_currency.isalpha():
+            raise HTTPException(status_code=422, detail='reporting_currency must be a three-letter code')
+        result = CompanyAnalyticsService(AnalyticsRepository(db)).performance(company_id, reporting_currency, period, adjusted)
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
     if result is None:
@@ -177,7 +181,10 @@ def run_analytics_job(scope_type: str = 'global', scope_value: str | None = None
     invalid = [period for period in period_list if period not in {'1D','1W','1M','3M','6M','YTD','1Y','3Y','5Y','ALL'}]
     if invalid:
         raise HTTPException(status_code=422, detail=f'Unsupported periods: {invalid}')
-    job = AnalyticsJobService(db).start(scope_type, scope_value, period_list)
+    try:
+        job = AnalyticsJobService(db).start(scope_type, scope_value, period_list)
+    except ValueError as exc:
+        raise HTTPException(status_code=409, detail=str(exc))
     repository = AnalyticsRepository(db)
     processed = len(repository.get_companies(limit=10000))
     return AnalyticsJobService(db).complete(job.id, records_processed=processed)

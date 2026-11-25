@@ -43,3 +43,9 @@ Country ingestion is deliberately not claimed until a maintained instrument list
 - Sector and market capitalization can be missing.
 - Exchange discovery requires separate supported search/screener functionality or a maintained instrument list.
 - Unit tests use synthetic data and do not require network access.
+
+## Phase 3 live market infrastructure
+
+Live infrastructure supports snapshot-only providers and Redis cache/PubSub. Real-time streaming requires an officially licensed provider. Redis is optional and live endpoints degrade when unavailable.
+
+Use `MARKET_DATA_PROVIDER=none` for normal startup without credentials. Docker starts PostgreSQL, Redis, and the backend through `docker compose up --build`.

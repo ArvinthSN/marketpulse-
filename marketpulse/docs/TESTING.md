@@ -37,3 +37,14 @@ docker compose exec postgres pg_isready -U marketpulse -d marketpulse
 curl http://localhost:8000/health/database
 docker compose down
 ```
+
+## Static analysis
+
+```bash
+python -m compileall -q app migrations tests
+python -m pip install ruff mypy
+ruff check app migrations tests
+mypy app
+```
+
+Pylance unresolved-import diagnostics must be investigated against the interpreter selected in VS Code. Runtime success alone does not prove editor environment correctness.

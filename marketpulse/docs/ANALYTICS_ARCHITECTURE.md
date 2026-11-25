@@ -24,6 +24,10 @@ Missing, non-finite, and zero reference prices return `null`; they are never sub
 
 A provider-independent `FXRateProvider` interface must supply persisted or external rates. Different currencies are not summed without conversion. The default null provider only converts identity currencies and returns unavailable for other pairs. Responses include reporting currency, source, observation freshness, coverage, and warnings.
 
+## FX provider implementation
+
+Frankfurter is implemented behind `FXRateProvider`. It uses ECB reference rates, requires no API key, has configurable timeout/retries, and persists successful rates in `exchange_rate_snapshots`. Identity currencies return 1.0. Missing or invalid rates return unavailable. Persisted rates older than the configured stale window are marked stale and are not silently substituted.
+
 ## Persistence
 
 The `003_phase20` migration adds adjusted close and shares-outstanding provenance, FX snapshots, analytics snapshots, and analytics job runs. Analytics snapshots should be refreshed or retired through a documented retention job; no automatic retention policy is assumed in this implementation.

@@ -12,7 +12,7 @@ def calculate_return(current: float | None, reference: float | None) -> float | 
 
 
 def closest_observation(records: list[tuple[datetime, float]], target: datetime, tolerance_days: int = 10) -> float | None:
-    valid = [(ts, price) for ts, price in records if price is not None and isfinite(price) and price > 0]
+    valid = _deduplicate_sessions(records)
     if not valid:
         return None
     times = [ts for ts, _ in valid]
@@ -28,22 +28,52 @@ def closest_observation(records: list[tuple[datetime, float]], target: datetime,
     return nearest[1]
 
 
-def performance_for_period(records: list[tuple[datetime, float]], period: str, now: datetime, tolerance_days: int = 10) -> float | None:
-    valid = sorted((ts, price) for ts, price in records if price is not None and isfinite(price) and price > 0)
-    if len(valid) < 2:
+def prior_trading_session(records: list[tuple[datetime, float]], target: datetime, tolerance_days: int) -> float | None:
+    valid = _deduplicate_sessions(records)
+    candidates = [(timestamp, price) for timestamp, price in valid if timestamp <= target]
+    if not candidates:
         return None
-    current = valid[-1][1]
+    timestamp, price = candidates[-1]
+    if abs(target - timestamp) > timedelta(days=tolerance_days):
+        return None
+    return price
+
+
+def performance_for_period(records: list[tuple[datetime, float]], period: str, now: datetime, tolerance_days: int = 10) -> float | None:
+    valid = _deduplicate_sessions(records)
+    if not valid:
+        return None
+
+    current_timestamp, current = valid[-1]
     if period == '1D':
+        if len(valid) < 2:
+            return None
         reference = valid[-2][1]
     elif period == 'YTD':
-        target = datetime(now.year - 1, 12, 31, tzinfo=now.tzinfo)
-        reference = closest_observation(valid, target, 31)
+        prior_year_start = datetime(now.year - 1, 1, 1, tzinfo=now.tzinfo)
+        prior_year_end = datetime(now.year, 1, 1, tzinfo=now.tzinfo)
+        prior_year_sessions = [(timestamp, price) for timestamp, price in valid if prior_year_start <= timestamp < prior_year_end]
+        if not prior_year_sessions:
+            return None
+        reference = prior_year_sessions[-1][1]
+    elif period == 'ALL':
+        if len(valid) < 2:
+            return None
+        reference = valid[0][1]
     else:
-        calendar_days = {'1W': 7, '1M': 31, '3M': 92, '6M': 183, '1Y': 365, '3Y': 1095, '5Y': 1825, 'ALL': 36500}
-        if period == 'ALL':
-            reference = valid[0][1]
-        else:
-            if period not in calendar_days:
-                return None
-            reference = closest_observation(valid, now - timedelta(days=calendar_days[period]), tolerance_days)
+        calendar_days = {'1W': 7, '1M': 31, '3M': 92, '6M': 183, '1Y': 365, '3Y': 1095, '5Y': 1825}
+        if period not in calendar_days:
+            return None
+        target = now - timedelta(days=calendar_days[period])
+        reference = prior_trading_session(valid, target, tolerance_days)
+
     return calculate_return(current, reference)
+
+
+def _deduplicate_sessions(records: list[tuple[datetime, float]]) -> list[tuple[datetime, float]]:
+    deduplicated: dict[datetime, float] = {}
+    for timestamp, price in sorted(records, key=lambda item: item[0]):
+        if price is not None and isfinite(price) and price > 0:
+            if timestamp not in deduplicated:
+                deduplicated[timestamp] = price
+    return sorted(deduplicated.items())

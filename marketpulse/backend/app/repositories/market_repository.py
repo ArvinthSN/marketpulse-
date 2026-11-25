@@ -32,7 +32,8 @@ class MarketRepository:
         for record in records:
             existing = self.db.scalar(select(HistoricalPrice).where(HistoricalPrice.company_symbol_id == company_symbol.id,
                 HistoricalPrice.timestamp == record.timestamp, HistoricalPrice.interval == interval))
-            values = dict(open=record.open, high=record.high, low=record.low, close=record.close, volume=record.volume,
+            values = dict(open=record.open, high=record.high, low=record.low, close=record.close,
+                          adjusted_close=getattr(record, 'adjusted_close', None), volume=record.volume,
                           currency=record.currency or 'USD', interval=interval, source=source)
             if existing:
                 for key, value in values.items(): setattr(existing, key, value)

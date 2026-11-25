@@ -45,3 +45,27 @@ class AnalyticsRepository:
             FXRateSnapshot.quote_currency == quote_currency,
             FXRateSnapshot.observed_at <= as_of,
         ).order_by(FXRateSnapshot.observed_at.desc()).limit(1))
+
+    def get_batch_observations(self, company_ids: list[int], limit_per_company: int = 500):
+        if not company_ids:
+            return {}
+        stmt = (select(HistoricalPrice, CompanySymbol.company_id).join(CompanySymbol, CompanySymbol.id == HistoricalPrice.company_symbol_id)
+                .where(CompanySymbol.company_id.in_(company_ids), HistoricalPrice.interval == '1d')
+                .order_by(HistoricalPrice.timestamp.desc()))
+        rows = list(self.db.execute(stmt).all())
+        grouped: dict[int, list] = {company_id: [] for company_id in company_ids}
+        for row, company_id in rows:
+            if len(grouped[company_id]) < limit_per_company:
+                grouped[company_id].append(row)
+        return {company_id: list(reversed(observations)) for company_id, observations in grouped.items()}
+
+    def get_exchange_ids_batch(self, company_ids: list[int]) -> dict[int, list[int]]:
+        if not company_ids:
+            return {}
+        rows = self.db.execute(select(CompanySymbol.company_id, CompanySymbol.exchange_id).where(
+            CompanySymbol.company_id.in_(company_ids)
+        ).distinct()).all()
+        grouped = {company_id: [] for company_id in company_ids}
+        for company_id, exchange_id in rows:
+            grouped[company_id].append(exchange_id)
+        return grouped

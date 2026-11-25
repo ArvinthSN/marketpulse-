@@ -50,8 +50,19 @@ class YahooProvider(MarketDataProvider):
                             continue
                         timestamp = ts.to_pydatetime()
                         if timestamp.tzinfo is not None: timestamp = timestamp.astimezone(timezone.utc).replace(tzinfo=None)
+                        adjusted_close = None
+                        if 'Adj Close' in frame.columns:
+                            adjusted_value = row.get('Adj Close')
+                            if adjusted_value is not None:
+                                try:
+                                    adjusted_close = Decimal(str(adjusted_value))
+                                    if adjusted_close <= 0:
+                                        adjusted_close = None
+                                except (InvalidOperation, ValueError):
+                                    adjusted_close = None
                         records.append(OHLCVRecord(timestamp=timestamp, open=Decimal(str(row['Open'])), high=Decimal(str(row['High'])),
-                            low=Decimal(str(row['Low'])), close=Decimal(str(row['Close'])), volume=int(max(volume, 0)), currency=''))
+                            low=Decimal(str(row['Low'])), close=Decimal(str(row['Close'])), adjusted_close=adjusted_close,
+                            volume=int(max(volume, 0)), currency=''))
                     except (KeyError, ValueError, InvalidOperation):
                         continue
                 if not records:

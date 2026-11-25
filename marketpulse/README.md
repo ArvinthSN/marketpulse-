@@ -18,6 +18,8 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
+Keep this backend terminal running. Open a **second VS Code terminal** for the frontend commands below. To run backend tests, use `pytest` from the `backend` directory.
+
 The SQLite database file is created at `backend/marketpulse.db` when you run the backend from the `backend` directory.
 
 API: http://localhost:8000/docs

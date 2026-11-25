@@ -1,4 +1,4 @@
-import type { Company, CompanyPerformance, Country, CountryOverview, Exchange, GlobalOverview, SectorOverview, Quote, CountryMover } from '../types/market';
+import type { Company, CompanyPerformance, Country, CountryOverview, Exchange, GlobalOverview, SectorOverview, Quote, CountryMover, CompanyHistory } from '../types/market';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
@@ -48,8 +48,8 @@ export const api = {
     request<SectorOverview[]>(`/api/v1/analytics/countries/${encodeURIComponent(code)}/sectors`, signal),
   sectors: (signal?: AbortSignal) =>
     request<SectorOverview[]>('/api/v1/analytics/global/sectors', signal),
-  sectorOverview: (id: number, signal?: AbortSignal) =>
-    request<SectorOverview>(`/api/v1/analytics/sectors/${id}/overview`, signal),
+  sectorOverview: (id: number, country?: string, signal?: AbortSignal) =>
+    request<SectorOverview>(`/api/v1/analytics/sectors/${id}/overview${country ? `?country_code=${encodeURIComponent(country)}` : ''}`, signal),
   companies: (params: { country?: string; limit?: number; offset?: number } = {}, signal?: AbortSignal) => {
     const query = new URLSearchParams();
     if (params.country) query.set('country', params.country);
@@ -57,6 +57,11 @@ export const api = {
     query.set('offset', String(params.offset ?? 0));
     return request<Company[]>(`/api/v1/companies?${query.toString()}`, signal);
   },
+  sectorCompanies: (id: number, country?: string, signal?: AbortSignal) =>
+    request<{ company_id: number; name: string; market_cap: number | null; country_code: string | null }[]>(`/api/v1/analytics/sectors/${id}/companies?limit=1000${country ? `&country_code=${encodeURIComponent(country)}` : ''}`, signal),
+  company: (id: number, signal?: AbortSignal) => request<Company>(`/api/v1/companies/${id}`, signal),
+  companyHistory: (id: number, limit = 1000, signal?: AbortSignal) => request<CompanyHistory[]>(`/api/v1/companies/${id}/history?limit=${limit}`, signal),
+  companyMetrics: (id: number, signal?: AbortSignal) => request<{ current_volume: number | null; relative_volume: number | null; historical_volatility: number | null }>(`/api/v1/analytics/companies/${id}/metrics`, signal),
   companyPerformance: (id: number, period = '1D', signal?: AbortSignal) =>
     request<CompanyPerformance>(`/api/v1/analytics/companies/${id}/performance?period=${encodeURIComponent(period)}`, signal),
   quote: (symbol: string, exchange = 'NASDAQ', signal?: AbortSignal) =>

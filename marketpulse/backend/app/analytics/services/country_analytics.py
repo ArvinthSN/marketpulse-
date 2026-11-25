@@ -12,15 +12,23 @@ class CountryAnalyticsService:
             return None
         companies = self.repository.get_companies(country_code=country_code)
         items = []
+        observation_times = []
+        valid_observation_count = 0
         for company in companies:
             observations = self.repository.get_company_observations(company.id, limit=500)
             value = None
+            if observations:
+                observation_times.append(observations[-1].timestamp)
             if len(observations) >= 2:
                 current = float(observations[-1].close)
                 reference = float(observations[-2].close)
                 value = ((current - reference) / reference * 100) if reference else None
+                if value is not None:
+                    valid_observation_count += 1
             items.append({'company_id': company.id, 'return_percentage': value, 'market_cap': float(company.market_cap) if company.market_cap is not None else None})
         aggregate = country_returns(items)
+        expected = len(companies)
+        data_status = 'UNAVAILABLE' if valid_observation_count == 0 else ('PARTIAL' if valid_observation_count < expected else 'AVAILABLE')
         return {
             'country_code': country.code,
             'country_name': country.name,
@@ -28,6 +36,13 @@ class CountryAnalyticsService:
             'market_cap_weighted_return': aggregate['market_cap_weighted'],
             'equal_weighted_return': aggregate['equal_weighted'],
             'total_market_cap': sum(item['market_cap'] for item in items if item['market_cap'] is not None),
-            'tracked_companies': len(companies),
+            'tracked_companies': expected,
             'breadth': breadth([item['return_percentage'] for item in items]),
+            'data_status': data_status,
+            'source_observation_at': max(observation_times).isoformat() if observation_times else None,
+            'coverage': {
+                'expected': expected,
+                'available': valid_observation_count,
+                'missing': expected - valid_observation_count,
+            },
         }
